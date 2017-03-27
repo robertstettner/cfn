@@ -126,6 +126,29 @@ describe('create/update', function() {
                         updateStackStub.stub.should.be.calledOnce();
                     });
             });
+            it('updates stack with parameters', function(){
+                var cfn = require('../');
+                return cfn({
+                    name: 'TEST-JSON-TEMPLATE',
+                    template: path.join(__dirname, '/templates/test-template-4.json'),
+                    params: {
+                        TableName: 'TestTable'
+                    }
+                })
+                    .then(function (data) {
+                        createStackStub.stub.should.not.be.called();
+                        updateStackStub.stub.should.be.calledOnce();
+                        updateStackStub.stub.should.be.calledWithMatch({
+                            Parameters: [
+                                {
+                                    ParameterKey: 'TableName',
+                                    ParameterValue: 'TestTable'
+                                }
+                            ]
+                        });
+                        return data;
+                    });
+            });
         });
         describe('if stack does not exist', function(){
             beforeEach(function(){
@@ -142,6 +165,29 @@ describe('create/update', function() {
                         return data;
                     })
             })
+            it('creates stack with parameters', function(){
+                var cfn = require('../');
+                return cfn({
+                    name: 'TEST-JSON-TEMPLATE',
+                    template: path.join(__dirname, '/templates/test-template-4.json'),
+                    params: {
+                        TableName: 'TestTable'
+                    }
+                })
+                    .then(function (data) {
+                        createStackStub.stub.should.be.calledOnce();
+                        createStackStub.stub.should.be.calledWithMatch({
+                            Parameters: [
+                                {
+                                    ParameterKey: 'TableName',
+                                    ParameterValue: 'TestTable'
+                                }
+                            ]
+                        });
+                        updateStackStub.stub.should.not.be.called();
+                        return data;
+                    });
+            });
         })
     });
 });

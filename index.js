@@ -247,6 +247,16 @@ function Cfn(name, template) {
         return Promise.resolve(JSON.stringify(fn(params)));
     }
 
+    function convertParams(p) {
+        if (!_.isPlainObject(p)) return [];
+        return (Object.keys(p)).map(function (key) {
+            return {
+                ParameterKey: key,
+                ParameterValue: p[key]
+            };
+        });
+    }
+
     function processStack(action, name, template) {
         var promise;
 
@@ -271,7 +281,8 @@ function Cfn(name, template) {
                 return processCfStack(action, {
                     StackName: name,
                     Capabilities: capabilities,
-                    TemplateBody: data
+                    TemplateBody: data,
+                    Parameters: convertParams(params)
                 });
             })
             .then(function () {
