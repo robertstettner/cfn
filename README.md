@@ -23,7 +23,7 @@ $ npm install cfn --save-dev
 
 ### Create / Update
 Use cfn to create or update a Cloud Formation stack.  It returns a promise.  You can use Node.js modules or standard
-json for Cloud Formation Templates.
+json or yaml for Cloud Formation Templates.
 
 ```javascript
 
@@ -38,6 +38,9 @@ cfn('Foo-Bar', __dirname + '/template.js')
 
 // Create or update the Foo-Bar stack with the template.json json template.
 cfn('Foo-Bar', 'template.json');
+
+// Create or update the Foo-Bar2 stack with the template.yml yaml template.
+cfn('Foo-Bar2', 'template.yml');
 
 ```
 
@@ -87,20 +90,51 @@ The name of the stack to Create / Update.  If the first arg is a string it is us
 Options object.  If the first arg is an object it will be used as options.
 
 #### template
-Path to the template (js or json file).  This is optional and if given will override options.template (if present).  This arg is helpful if the first arg is the name of the template rather than an options object.
+Path to template (js, yaml or json file), JSON object, serialized JSON string, or a YAML string. This is optional and if given will override options.template (if present).  This arg is helpful if the first arg is the name of the template rather than an options object.
 
 ##### options.name
 Name of stack
 
 ##### options.template
-Path to template (json or js file), or a JSON object. If the optional second argument is passed in it
+Path to template (json, yaml or js file), JSON object, serialized JSON string, or a YAML string. If the optional second argument is passed in it
 will override this.
 
 ##### options.async
 If set to true create/update and delete runs asynchronously. Defaults to false.
 
 ##### options.params
-This is an object that gets passed to function templates.  For example this .js template
+There are two types of parameters that can be used: 
+* The standard AWS Cloudformation parameters
+* Interpolated parameters into JS module-wrapped Cloudformation templates
+
+A standard AWS Cloudformation template in yaml format is shown below:
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Test Stack'
+
+Parameters:
+  env:
+    Type: String
+    Description: The environment for the application
+
+Resources:
+  testTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      ...
+      TableName: !Sub FOO-TABLE-${env}
+```
+
+Is deployed as follows:
+```javascript
+cfn({
+    name: 'Test-Stack',
+    template: 'template.yml',
+    params: { env: 'dev' }
+});
+```
+
+A JS module-wrapped template example is shown below:
 ```javascript
 module.exports = function (params) {
     return {
@@ -119,7 +153,7 @@ module.exports = function (params) {
 };
 ```
 
-Could be deployed as follows
+Is deployed as follows:
 ```javascript
 cfn({
     name: 'Test-Stack',

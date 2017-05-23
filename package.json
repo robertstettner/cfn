@@ -57,7 +57,8 @@
     "https-proxy-agent": "^1.0.0",
     "lodash": "^4.13.1",
     "moment": "^2.13.0",
-    "sprintf": "^0.1.5"
+    "sprintf": "^0.1.5",
+    "yamljs": "0.2.10"
   },
   "devDependencies": {
     "aws-sdk-mock": "^1.6.1",

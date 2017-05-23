@@ -9,6 +9,7 @@
 var filesystem = require('fs');
 
 var Promise = require('bluebird'),
+    YAML = require('yamljs'),
     AWS = require('aws-sdk'),
     _ = require('lodash'),
     sprintf = require('sprintf'),
@@ -257,18 +258,50 @@ function Cfn(name, template) {
         });
     }
 
+    function isStringOfType(type, str) {
+        var result = true;
+        try {
+            type.parse(str);
+        } catch (ignore) {
+            result = false;
+        }
+        return result;
+    }
+
+    function isJSONString(str) {
+        return isStringOfType(JSON, str);
+    }
+
+    function isYAMLString(str) {
+        return isStringOfType(YAML, str) && str.split(/\r\n|\r|\n/).length > 1;
+    }
+
+    function isValidTemplateString(str) {
+        return isJSONString(str) || isYAMLString(str);
+    }
+
     function processStack(action, name, template) {
-        var promise;
+        var promise, stackOptions = {
+            StackName: name,
+            Capabilities: capabilities,
+            Parameters: convertParams(params)
+        };
 
         switch (true) {
             // Check if template if a `js` file
             case _.endsWith(template, '.js'):
                 promise = loadJs(template);
+                delete stackOptions.Parameters;
                 break;
 
             // Check if template is an object, assume this is JSON good to go
-            case _.isObjectLike(template):
+            case _.isPlainObject(template):
                 promise = Promise.resolve(JSON.stringify(template));
+                break;
+
+            // Check if template is a valid string, serialised json or yaml
+            case isValidTemplateString(template):
+                promise = Promise.resolve(template);
                 break;
 
             // Default to loading template from file.
@@ -278,12 +311,8 @@ function Cfn(name, template) {
 
         return promise
             .then(function (data) {
-                return processCfStack(action, {
-                    StackName: name,
-                    Capabilities: capabilities,
-                    TemplateBody: data,
-                    Parameters: convertParams(params)
-                });
+                stackOptions.TemplateBody = data;
+                return processCfStack(action, stackOptions);
             })
             .then(function () {
                 return async ? Promise.resolve() : checkStack(action, name);
