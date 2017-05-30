@@ -82,6 +82,7 @@ function Cfn(name, template) {
         opts = _.isPlainObject(name) ? name : {},
         startedAt = Date.now(),
         params = opts.params,
+        cfParams = opts.cfParams || {},
         awsConfig = opts.awsConfig,
         capabilities = opts.capabilities || ['CAPABILITY_IAM'],
         awsOpts = {},
@@ -281,17 +282,12 @@ function Cfn(name, template) {
     }
 
     function processStack(action, name, template) {
-        var promise, stackOptions = {
-            StackName: name,
-            Capabilities: capabilities,
-            Parameters: convertParams(params)
-        };
+        var promise;
 
         switch (true) {
             // Check if template if a `js` file
             case _.endsWith(template, '.js'):
                 promise = loadJs(template);
-                delete stackOptions.Parameters;
                 break;
 
             // Check if template is an object, assume this is JSON good to go
@@ -311,8 +307,12 @@ function Cfn(name, template) {
 
         return promise
             .then(function (data) {
-                stackOptions.TemplateBody = data;
-                return processCfStack(action, stackOptions);
+                return processCfStack(action, {
+                    StackName: name,
+                    Capabilities: capabilities,
+                    TemplateBody: data,
+                    Parameters: convertParams(cfParams)
+                });
             })
             .then(function () {
                 return async ? Promise.resolve() : checkStack(action, name);
