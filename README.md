@@ -22,7 +22,7 @@ $ npm install cfn --save-dev
 ## Usage
 
 ### Create / Update
-Use cfn to create or update a Cloud Formation stack.  It returns a promise.  You can use Node.js modules or standard
+Use cfn to create or update an AWS CloudFormation stack.  It returns a promise.  You can use Node.js modules or standard
 json or yaml for AWS CloudFormation templates.
 
 ```javascript

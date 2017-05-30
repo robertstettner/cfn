@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Main Stack Cloud Formation Module
+ * Main Stack CloudFormation Module
  */
 
 module.exports = function (params) {
@@ -30,7 +30,9 @@ module.exports = function (params) {
                         }
                     ],
                     ProvisionedThroughput: {
-                        ReadCapacityUnits: '1',
+                        ReadCapacityUnits: {
+                            "Ref": "readCap"
+                        },
                         WriteCapacityUnits: '1'
                     },
                     TableName: 'TEST-TABLE-6-' + params.testParam
